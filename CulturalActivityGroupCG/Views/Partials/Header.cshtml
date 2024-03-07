@@ -1,0 +1,46 @@
+﻿@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@using Umbraco.Cms.Core
+@using Umbraco.Cms.Core.Models.PublishedContent
+@using Umbraco.Cms.Core.Routing
+@using Umbraco.Extensions
+
+@inject IPublishedValueFallback PublishedValueFallback
+@inject IPublishedUrlProvider PublishedUrlProvider
+
+@{
+    var HeaderLogo = Model.Root()?.Value<IPublishedContent>("headerLogo")?.Url() ?? "";
+}
+
+<header id="header" class="fixed-top d-flex align-items-center ">
+    <div class="container d-flex justify-content-between align-items-center">
+
+        <div class="logo">
+        <a href="/">
+            @if (HeaderLogo != null)
+            {
+                <img class="img-fluid" src="@HeaderLogo" alt="logo"/>
+            }
+        </a>
+        </div>
+
+        <nav id="navbar" class="navbar">
+            @{
+                var selection = Model.Root().Children.Where(x => x.IsVisible(PublishedValueFallback)).ToArray();
+            }
+            
+            @if (selection?.Length > 0)
+            {
+                <ul>
+                    <li>About us</li>
+                  @foreach (var item in selection)
+                    {
+                        <li class="@(item.IsAncestorOrSelf(Model) ? "current" : null)">
+                          <a class="" href="@item.Url(PublishedUrlProvider)">@item.Name</a>
+                        </li>
+                    }
+                </ul>
+                <i class="bi bi-list mobile-nav-toggle"></i>
+            }
+        </nav>
+    </div>
+</header>

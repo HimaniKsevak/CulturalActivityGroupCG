@@ -1,0 +1,129 @@
+﻿@using Umbraco.Cms.Web.Common.PublishedModels;
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.Gallery>
+@using ContentModels = Umbraco.Cms.Web.Common.PublishedModels;
+@using Umbraco.Cms.Core.Models.Blocks;
+@{
+	Layout = "Master.cshtml";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+    <div class="gallery pt-5">
+        <!-- Filter Controls -->
+        <ul class="controls">
+            <li class="buttons active" data-filter="all">all</li>
+            @foreach (var item in Model.Value<IEnumerable<BlockListItem>>("events"))
+            {
+                var eventTitle = item.Content.Value<string>("eventTitle");
+                <li class="buttons" data-filter="@(string.Join("-", eventTitle.ToLowerInvariant().Split(" ")))">@eventTitle</li>
+            }
+        </ul>
+
+        <!-- Image Container -->
+        <div class="image-container">
+            @foreach (var item in Model.Value<IEnumerable<BlockListItem>>("events"))
+            {
+                var content = item.Content;
+                var media = content.Value<IEnumerable<IPublishedContent>>("media");
+                var eventTitle = content.Value<string>("eventTitle");
+
+                foreach (var mediaItem in media)
+                {
+                    @if (mediaItem.ContentType.Alias == "Image")
+                    {
+                        <a href="@mediaItem.Url()" class="image @(string.Join("-",eventTitle.ToLowerInvariant().Split(" ")))">
+                            <img src="@mediaItem.Url()" alt="">
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="@mediaItem.Url()" class="image @(string.Join("-",eventTitle.ToLowerInvariant().Split(" "))) video_model">
+                            <video controls class="img-fluid" height="350" width="400">
+                                <source src="@mediaItem.Url()" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </a>
+                    }
+                }
+            }
+        </div>
+    </div>
+
+    <!-- jQuery CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- magnific popup js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+
+    <!-- Custom Script -->
+    <script>
+        $(document).ready(function () {
+            // Initialize an empty object to store images by category
+            var imagesByCategory = {};
+
+            // Loop through each image and categorize them
+            $('.image').each(function () {
+                var categories = $(this).attr('class').split(' ').filter(function (className) {
+                    return className !== 'image'; // Exclude the 'image' class itself
+                });
+                categories.forEach(function (category) {
+                    if (!imagesByCategory[category]) {
+                        imagesByCategory[category] = [];
+                    }
+                    imagesByCategory[category].push(this);
+                }.bind(this));
+            });
+
+            $('.buttons').click(function () {
+                $(this).addClass('active').siblings().removeClass('active');
+                var filter = $(this).attr('data-filter');
+                console.log(filter);
+                if (filter == 'all') {
+                    // Show all images when 'all' is selected
+                    $('.image').show(400);
+                } else {
+                    // Hide all images, then show only those belonging to the selected category
+                    $('.image').hide(200);
+                    imagesByCategory[filter].forEach(function (image) {
+                        $(image).show(400);
+                    });
+                }
+            });
+
+            $('.gallery').magnificPopup({
+                delegate: 'a',
+                type: 'image',
+                gallery: {
+                    enabled: true
+                },
+                callbacks: {
+                    elementParse: function (item) {
+                        // Filter images based on the selected event
+                        var filter = $('.buttons.active').attr('data-filter');
+                        if (filter !== 'all' && !item.el.hasClass(filter)) {
+                            item.type = 'inline'; // Hide images that don't match the selected event
+                        } else {
+                            if (item.el.hasClass('video_model')) {
+                                // For videos, change the type to iframe
+                                item.type = 'iframe';
+                            } else {
+                                // For images, clone and append to the carousel container
+                                var carouselContainer = $('.mfp-content .mfp-carousel');
+                                var clonedImage = item.el.clone();
+                                carouselContainer.append(clonedImage);
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

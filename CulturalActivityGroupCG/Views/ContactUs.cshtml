@@ -1,0 +1,50 @@
+﻿@using Umbraco.Cms.Web.Common.PublishedModels;
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.ContactUs>
+@using ContentModels = Umbraco.Cms.Web.Common.PublishedModels;
+@using Umbraco.Cms.Core.Models.Blocks
+@using Umbraco.Forms.Web
+@Html.RenderUmbracoFormDependencies(Url)
+
+@{
+	Layout = "Master.cshtml";
+	var SocialLinks = Model.Value<IEnumerable<BlockListItem>>("socialMediaIcons");
+}
+
+<div class="contact_page py_60 gray_bg">
+	<div class="container max_w_965">
+		<div class="row pt-5">
+		    <h1 class=text-center>@Model.Value("title")</h1>
+			<div class="col-md-5">
+				<div class="contct_info">
+					@Model.Value("contactInfo")
+					<div>
+						<h4>@Model.Value("connectHeading")</h4>
+						<div class="social_media">
+							@if (SocialLinks != null)
+							{
+								foreach (var SocialLink in SocialLinks)
+								{
+									var content = SocialLink.Content;
+									var Target = content.Value<string>("Target");
+									var Image = content.Value<IPublishedContent>("image");
+									var ToolTip = content.Value<string>("tooltipText");
+									var socialMediaURL = content.Value<string>("socialMediaURL");
+
+									@if (SocialLink != null)
+									{
+										<a href="@socialMediaURL" title="@ToolTip" target="@Target"><img src="@(Image?.Url() ?? "")"/></a>
+									}
+								}
+							}
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-7">
+				<div class="contact_form">
+                        @Model.Value("contactUsForm")
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

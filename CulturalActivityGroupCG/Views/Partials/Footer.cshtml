@@ -1,0 +1,112 @@
+﻿@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@using Umbraco.Cms.Core
+@using Umbraco.Cms.Core.Models.PublishedContent
+@using Umbraco.Cms.Core.Models;
+@using Umbraco.Cms.Core.Routing
+@using Umbraco.Extensions
+@using Umbraco.Cms.Core.Models.Blocks;
+
+@inject IPublishedValueFallback PublishedValueFallback
+@inject IPublishedUrlProvider PublishedUrlProvider
+
+@{
+    var FooterLogo = Model.Root()?.Value<IPublishedContent>("footerLogo")?.Url() ?? "";
+    var SocialLinks = Model.Value<IEnumerable<BlockListItem>>("socialMediaIconsList", fallback: Fallback.ToAncestors);
+    var ContactusLinks = Model.Root()?.Value<IEnumerable<Link>>("contactUsLinks");
+}
+
+<footer id="footer" data-aos="fade-up" data-aos-easing="ease-in-out" data-aos-duration="500">
+
+    <div class="footer-top">
+      <div class="container">
+        <div class="row">
+        
+          <div class="col-lg-2 col-md-6">
+            <a href="/">
+                @if (FooterLogo != null)
+                {
+                    <img class="img" src="@FooterLogo" title="logo" alt="logo" style="max-height: 75px;"/>
+                }
+            </a>
+          </div>
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Useful Links</h4>
+            
+            @{
+                var selection = Model.Root().Children.Where(x => x.IsVisible(PublishedValueFallback)).ToArray();
+            }
+            
+            @if (selection?.Length > 0)
+            {
+              <ul>
+                  @foreach (var item in selection)
+                    {
+                        <li class="@(item.IsAncestorOrSelf(Model) ? "current" : null)">
+                            <i class="bx bx-chevron-right"></i> <a href="@item.Url(PublishedUrlProvider)">@item.Name</a>
+                        </li>
+                    }
+              </ul>
+             }
+          </div>
+
+          <div class="col-lg-4 col-md-6 footer-contact">
+            <h4>Contact Us</h4>
+            <p>
+                <p style="color:white">
+                    @Model.Root()?.Value("address")
+                </p>
+              
+                @if (ContactusLinks != null)
+    			{
+    				var phoneClass = string.Empty;
+    				var i = 0;
+    				@foreach (var link in ContactusLinks)
+    				{
+    					if (i == 0)
+    					{
+    						phoneClass = "fas fa-envelope me-2";
+    					}
+    					else
+    					{
+    						phoneClass = "fas fa-phone me-2";
+    					}
+    					<h6><a href="@link.Url"><i class="@phoneClass"></i>@link.Name</a></h6>
+    					i++;
+    				}
+    
+    			}
+            </p>
+
+          </div>
+
+          <div class="col-lg-4 col-md-6 footer-info">
+            <h3>About Event Management</h3>
+            <p>@Model.Root()?.Value("about")</p>
+            <div class="social-links mt-3">
+                @if (SocialLinks != null)
+                {
+    				foreach (var SocialLink in SocialLinks)
+    				{
+    					var content = SocialLink.Content;
+    					var Target = content.Value<string>("Target");
+    					var Image = content.Value<IPublishedContent>("image");
+    					var ToolTip = content.Value<string>("tooltipText");
+    					var socialMediaURL = content.Value<string>("socialMediaURL");
+    
+    					@if (SocialLink != null)
+    					{
+    						<a href="@socialMediaURL" title="@ToolTip" target="@Target">
+    						    <img src="@Image.Url()" class="social-media-icon" />
+    						</a>
+    					}
+    				}
+                }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="text-center pt-1">
+        @Model.Root()?.Value("copyright")
+    </div>
+</footer>
